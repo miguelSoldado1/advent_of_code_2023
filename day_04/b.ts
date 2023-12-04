@@ -2,25 +2,31 @@ import * as fs from "fs";
 const input = fs.readFileSync("./day_04/input.txt", "utf8");
 let lines = input.split(/\r?\n|\r|\n/g);
 
-for (let line of lines) {
-  let [index, card] = line.split(": ");
-  const [winning, personal] = card.split(" | ").map((x) => x.split(" "));
-  index = index.split("Card ")[1];
+const indexes: number[] = [...Array(lines.length).keys()];
+const cardValues = new Map<number, number>();
+const cardAmounts = new Map<number, number>();
 
+for (let index of indexes) {
+  index = index + 1;
+  if (!cardValues.has(index)) {
+    const count = solveCard(lines[index - 1]);
+    cardValues.set(index, count);
+  }
+
+  cardAmounts.set(index, (cardAmounts.get(index) ?? 0) + 1);
+  indexes.push(...[...Array(cardValues.get(index)).keys()].map((i) => i + index));
+}
+
+function solveCard(line: string) {
   let count = 0;
+  line = line.split(": ")[1];
+  const [winning, personal] = line.split(" | ").map((x) => x.split(" "));
   for (const num of winning) {
     if (num && personal.includes(num)) {
       count++;
     }
   }
-
-  lines.push(...lines.slice(Number(index), Number(index) + count));
+  return count;
 }
 
-const lineCounts = {};
-lines.forEach((line) => {
-  const lineType = line.split(":")[0].trim();
-  lineCounts[lineType] = (lineCounts[lineType] || 0) + 1;
-});
-
-console.log(Object.values(lineCounts).reduce((acc: number, curr: number) => (acc += curr), 0));
+console.log(Array.from(cardAmounts.values()).reduce((acc, curr) => acc + curr, 0));
